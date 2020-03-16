@@ -2,6 +2,7 @@ __all__ = ["NE1000"]
 
 import asyncio
 from typing import Dict, Any
+import serial
 
 from yaqd_core import ContinuousHardware, logging
 
@@ -15,22 +16,11 @@ class NE1000(ContinuousHardware):
 
     def __init__(self, name, config, config_filepath):
         super().__init__(name, config, config_filepath)
-        # Perform any unique initialization
-
-    def _load_state(self, state):
-        """Load an initial state from a dictionary (typically read from the state.toml file).
-
-        Must be tolerant of missing fields, including entirely empty initial states.
-
-        Parameters
-        ----------
-        state: dict
-            The saved state to load.
-        """
-        super()._load_state(state)
-        # This is an example to show the symetry between load and get
-        # If no persistent state is needed, these unctions can be deleted
-        self.value = state.get("value", 0)
+        self.serial_port = config["serial_port"]
+        self.baud_rate = config["baud_rate"]
+        self.config_limits = config["limits"]
+        self.diameter = config["diameter"]
+        self.ser = serial.Serial(self.serial_port, self.baud_rate)
 
     def get_state(self):
         state = super().get_state()
