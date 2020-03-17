@@ -20,15 +20,23 @@ class NE1000(ContinuousHardware):
         self.baud_rate = config["baud_rate"]
         self.config_limits = config["limits"]
         self.diameter = config["diameter"]
+        self.address = config.get("address", 0)
+        self.limits = config.get("limits", default=[0, 1e3])
         self.ser = serial.Serial(self.serial_port, self.baud_rate)
+        # units
+        self.units = config.get("units", "ML")
+        # rate units
+        self.rate_units = config.get("rate_units", "MM")
 
     def get_state(self):
         state = super().get_state()
-        state["value"] = self.value
         return state
 
     def _set_position(self, position):
-        ...
+        raise NotImplementedError
+
+    def set_rate(self, rate):
+        raise NotImplementedError
 
     async def update_state(self):
         """Continually monitor and update the current daemon state."""
