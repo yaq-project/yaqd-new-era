@@ -15,7 +15,7 @@ with open("README.md") as readme_file:
     readme = readme_file.read()
 
 
-requirements = ["yaqd-core"]
+requirements = ["yaqd-core", "pyserial"]
 
 extra_requirements = {"dev": ["black", "pre-commit"]}
 extra_files = {"yaqd_new_era": ["VERSION"]}
