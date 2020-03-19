@@ -38,7 +38,6 @@ class NE1000(ContinuousHardware):
         self._rate = float(data[:-3])
 
     def direct_serial_write(self, message):
-        self._busy = True
         self.ser.write(message.encode())
 
     def get_state(self):
