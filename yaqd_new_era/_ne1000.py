@@ -18,6 +18,7 @@ class NE1000(ContinuousHardware):
     defaults["limits"] = [0, 1e3]
     defaults["units"] = "ML"
     defaults["rate_units"] = "MM"
+    defaults["low_noise"] = True
 
     def __init__(self, name, config, config_filepath):
         super().__init__(name, config, config_filepath)
@@ -36,6 +37,11 @@ class NE1000(ContinuousHardware):
         # get rate from pump
         prompt, alarm, data = self._write("RAT")
         self._rate = float(data[:-3])
+        # low noise mode
+        self._write(f"LN {int(config['low_noise'])}")
+
+    def close(self):
+        self.ser.close()
 
     def direct_serial_write(self, message):
         self.ser.write(message.encode())
@@ -47,7 +53,7 @@ class NE1000(ContinuousHardware):
 
     def prime(self):
         self._busy = True
-        self._loop.create_task(self._purge())
+        self._loop.create_task(self._prime())
 
     async def _prime(self):
         # prime
