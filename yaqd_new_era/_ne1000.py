@@ -12,6 +12,7 @@ logger.setLevel(logging.INFO)
 
 class NE1000(ContinuousHardware):
     _kind = "ne1000"
+    traits = ["uses-uart", "uses-serial"]
     defaults: Dict[str, Any] = {}  # of config
     defaults["baud_rate"] = 19200
     defaults["address"] = 0
