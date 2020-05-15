@@ -4,10 +4,7 @@ import asyncio
 from typing import Dict, Any
 import serial  # type: ignore
 
-from yaqd_core import ContinuousHardware, logging
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+from yaqd_core import ContinuousHardware
 
 
 class NE1000(ContinuousHardware):

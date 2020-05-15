@@ -7,3 +7,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 - initial release
+
+### Changed
+- moved to daemon-level logging, see [YEP-106](https://yeps.yaq.fyi/106/)
