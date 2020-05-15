@@ -6,9 +6,12 @@ import serial  # type: ignore
 
 from yaqd_core import ContinuousHardware
 
+from .__version__ import __branch__
+
 
 class NE1000(ContinuousHardware):
     _kind = "ne1000"
+    _version = "0.1.0" + f"+{__branch__}" if __branch__ else ""
     traits = ["uses-uart", "uses-serial"]
     defaults: Dict[str, Any] = {}  # of config
     defaults["baud_rate"] = 19200
