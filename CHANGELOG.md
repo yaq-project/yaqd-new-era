@@ -5,8 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2020.05.0]
+
 ### Added
 - initial release
 
-### Changed
-- moved to daemon-level logging, see [YEP-106](https://yeps.yaq.fyi/106/)
+[Unreleased]: https://gitlab.com/yaq/yaqd-horiba/-/compare/v2020.05.0...master
+[2020.05.0]: https://gitlab.com/yaq/yaqd-horiba/-/tags/v2020.05.0

@@ -25,12 +25,12 @@ before_script:
 mypy:
   stage: test
   script:
-    - mypy yaqd_horiba
+    - mypy yaqd_ne1000
 entry:
   stage: test
   script:
-    - yaqd-micro-hr --version
-    - yaqd-micro-hr -h
+    - yaqd-ne1000 --version
+    - yaqd-ne1000 -h
 
 # deploy stage
 twine:
