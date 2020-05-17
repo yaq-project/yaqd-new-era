@@ -25,7 +25,7 @@ before_script:
 mypy:
   stage: test
   script:
-    - mypy yaqd_ne1000
+    - mypy yaqd_new_era
 entry:
   stage: test
   script:
