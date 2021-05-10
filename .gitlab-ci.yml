@@ -13,15 +13,16 @@ before_script:
   - pip install -U virtualenv
   - virtualenv venv
   - source venv/bin/activate
-  - pip install -U twine
+  - pip install -U flit
   - pip install -U pytest
   - pip install -U mypy
   - pip install -U yaqc
   - pip install -U yaqd-core
-  - pip install -U pyserial
-  - pip install -e .
+  - pip install -U yaq-traits
+  - pip install .
 
 # test stage
+
 mypy:
   stage: test
   script:
@@ -29,15 +30,18 @@ mypy:
 entry:
   stage: test
   script:
-    - yaqd-ne1000 --version
-    - yaqd-ne1000 -h
+    - yaqd-new-era-ne1000 --version
+    - yaqd-new-era-ne1000 -h
+traits:
+  stage: test
+  script:
+    - for i in yaqd_new_era/*.avpr; do yaq-traits check $i; done
 
 # deploy stage
-twine:
+flit:
   stage: deploy
   script:
-    - python setup.py sdist bdist_wheel
-    - twine upload dist/*
+    - flit publish
   artifacts:
     paths:
       - dist/*

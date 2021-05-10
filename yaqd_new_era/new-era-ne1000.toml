@@ -1,0 +1,60 @@
+protocol = "new-era-ne1000"
+doc = ""
+traits = ["has-position", "has-limits", "uses-serial", "uses-uart", "is-daemon"]
+
+[links]
+source = "https://gitlab.com/yaq/yaqd-new-era"
+bugtracker = "https://gitlab.com/yaq/yaqd-new-era/-/issues"
+
+[installation]
+PyPI = "https://pypi.org/project/yaqd-new-era"
+
+[config]
+
+[config.address]
+doc = "New era address within RS232 network. Integer from 0 to 99."
+type = "int"
+
+[config.diameter]
+doc = "Inside diameter of syringe."
+type = "double"
+
+[config.volume_units]
+doc = "Volume units."
+type = {"type"="enum", "name"="volume_unit", "symbols"=["microliter", "milliliter"]}
+default = "milliter"
+
+[config.rate_units]
+doc = "Rate units."
+type = {"type"="enum", "name"="rate_unit", "symbols"=["microliter/minute", "milliliter/minute", "microliter/hour", "milliliter/hour"]}
+
+[config.low_noise_mode]
+doc = "Low noise motor mode. Increases motor stepping resolution."
+type = "boolean"
+default = true
+
+[messages]
+
+[messages.purge]
+doc = "Fully inject the pump."
+request = []
+
+[messages.prime]
+doc = "Fully withdraw the pump."
+request = []
+
+[messages.get_rate]
+doc = "Get current rate, in units specified within config."
+response = "double"
+
+[messages.set_rate]
+doc = "Set current rate, in units specified within config."
+request = [{"name"="rate", "type"="double"}]
+
+[fields]
+
+[fields.rate]
+type = "double"
+getter = "get_rate"
+setter = "set_rate"
+kind = "normal"
