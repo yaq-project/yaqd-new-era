@@ -92,6 +92,7 @@
             "type": "int"
         },
         "rate_units": {
+            "default": "milliliter/minute",
             "doc": "Rate units.",
             "type": {
                 "name": "rate_unit",
@@ -118,7 +119,7 @@
             "type": "string"
         },
         "volume_units": {
-            "default": "milliter",
+            "default": "milliliter",
             "doc": "Volume units.",
             "type": {
                 "name": "volume_unit",
@@ -130,7 +131,7 @@
             }
         }
     },
-    "doc": "",
+    "doc": "Simple daemon for controlling popular NE1000 syringe pump from New Era Pump Systems.",
     "fields": {
         "destination": {
             "fields": {
@@ -174,6 +175,9 @@
             "type": "double"
         }
     },
+    "hardware": [
+        "new-era:ne1000"
+    ],
     "installation": {
         "PyPI": "https://pypi.org/project/yaqd-new-era"
     },
