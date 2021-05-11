@@ -1,6 +1,7 @@
 protocol = "new-era-ne1000"
-doc = ""
+doc = "Simple daemon for controlling popular NE1000 syringe pump from New Era Pump Systems."
 traits = ["has-position", "has-limits", "uses-serial", "uses-uart", "is-daemon"]
+hardware = ["new-era:ne1000"]
 
 [links]
 source = "https://gitlab.com/yaq/yaqd-new-era"
@@ -22,11 +23,12 @@ type = "double"
 [config.volume_units]
 doc = "Volume units."
 type = {"type"="enum", "name"="volume_unit", "symbols"=["microliter", "milliliter"]}
-default = "milliter"
+default = "milliliter"
 
 [config.rate_units]
 doc = "Rate units."
 type = {"type"="enum", "name"="rate_unit", "symbols"=["microliter/minute", "milliliter/minute", "microliter/hour", "milliliter/hour"]}
+default = "milliliter/minute"
 
 [config.low_noise_mode]
 doc = "Low noise motor mode. Increases motor stepping resolution."
