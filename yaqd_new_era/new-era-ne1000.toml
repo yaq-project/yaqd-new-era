@@ -9,6 +9,7 @@ bugtracker = "https://gitlab.com/yaq/yaqd-new-era/-/issues"
 
 [installation]
 PyPI = "https://pypi.org/project/yaqd-new-era"
+conda-forge = "https://anaconda.org/conda-forge/yaqd-new-era"
 
 [config]
 
