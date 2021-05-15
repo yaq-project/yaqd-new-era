@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- document prescence on conda-forge
+
 ## [2021.5.0]
 
 ### Changed
