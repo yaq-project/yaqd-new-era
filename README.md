@@ -12,3 +12,4 @@ yaq daemons for new era pump systems hardware
 This package contains the following daemon(s):
 
 - https://yaq.fyi/daemons/new-era-ne1000
+- https://yaq.fyi/daemons/new-era-continuous-nextgen

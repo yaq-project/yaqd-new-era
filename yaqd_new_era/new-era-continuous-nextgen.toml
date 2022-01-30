@@ -1,0 +1,39 @@
+protocol = "new-era-continuous-nextgen"
+doc = "Daemon for controlling dual syringe pumps with special next generation firmware from New Era."
+traits = ["has-position", "is-discrete", "uses-serial", "uses-uart", "is-daemon"]
+hardware = ["new-era:dualne1000"]
+
+[links]
+source = "https://gitlab.com/yaq/yaqd-new-era"
+bugtracker = "https://gitlab.com/yaq/yaqd-new-era/-/issues"
+
+[installation]
+PyPI = "https://pypi.org/project/yaqd-new-era"
+conda-forge = "https://anaconda.org/conda-forge/yaqd-new-era"
+
+[config]
+
+[config.baud_rate]
+default = 19200
+
+[config.identifiers]
+default = {"paused" = 0, "pumping"=1}
+
+[messages]
+
+[messages.get_rate]
+doc = "Get current rate, in units specified within config."
+response = "double"
+
+[messages.set_rate]
+doc = "Set current rate, in units specified within config."
+request = [{"name"="rate", "type"="double"}]
+
+[properties]
+
+[properties.rate]
+type = "double"
+getter = "get_rate"
+setter = "set_rate"
+control_kind = "hinted"
+record_kind = "metadata"
