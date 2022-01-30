@@ -31,7 +31,7 @@ dev = ["black", "pre-commit"]
 
 [tool.flit.scripts]
 yaqd-new-era-ne1000 = "yaqd_new_era._new_era_ne1000:NewEraNe1000.main"
-
+yaqd-new-era-continuous-nextgen = "yaqd_new_era._new_era_continuous_nextgen:NewEraContinuousNextGen.main"
 
 [tool.black]
 line-length = 99

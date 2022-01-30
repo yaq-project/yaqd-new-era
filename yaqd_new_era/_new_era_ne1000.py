@@ -1,5 +1,3 @@
-__all__ = ["NewEraNe1000"]
-
 import re
 import asyncio
 import time
