@@ -19,6 +19,21 @@ default = 19200
 [config.identifiers]
 default = {"paused" = 0, "pumping"=1}
 
+[state]
+
+[state.position_identifier]
+type = "string"
+default = "paused"
+
+[state.current_alarm]
+type = "string"
+default = ""
+
+[state.current_prompt]
+type = "string"
+default = ""
+
+
 [messages]
 
 [messages.get_rate]
@@ -29,6 +44,11 @@ response = "double"
 doc = "Set current rate, in units specified within config."
 request = [{"name"="rate", "type"="double"}]
 
+[messages.set_alarm]
+doc = "Disables buzzer if active and sets output IO to LOW."
+request = [{"name"="alarm", "type"="boolean"}]
+
+
 [properties]
 
 [properties.rate]
@@ -37,3 +57,11 @@ getter = "get_rate"
 setter = "set_rate"
 control_kind = "hinted"
 record_kind = "metadata"
+
+[properties.alarm]
+type="boolean"
+getter= "get_alarm"
+setter = "set_alarm"
+control_kind="hinted"
+record_kind="metadata"
+
