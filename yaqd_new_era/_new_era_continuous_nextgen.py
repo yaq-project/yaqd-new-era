@@ -1,10 +1,11 @@
+from cmath import nan
 import re
 import asyncio
 import time
 from typing import Dict, Any, List
-
+import serial
 from yaqd_core import IsDaemon, HasPosition, IsDiscrete, UsesSerial, UsesUart, aserial
-
+import numpy as np
 
 """
 The full command set, alarms, prompts, addressing (for multiple pumps) mechanisms,
@@ -55,19 +56,29 @@ class NewEraContinuousNextGen(UsesUart, UsesSerial, IsDiscrete, HasPosition, IsD
         self._state["current_prompt"]=""
         self._state["position_identifier"] = "paused" # possibly to be read from config
         self._ser = aserial.ASerial(
-            self._config["serial_port"], baudrate=self._config["baud_rate"], eol="\x03".encode()
+            self._config["serial_port"], baudrate=self._config["baud_rate"], parity=serial.PARITY_NONE, bytesize=8, stopbits=1, eol="\x03".encode()
         )
-        self._rate = None
+        self._rate = float(np.nan)
         self._purging = False
         self._busy=False
+        self._updating=False
         # the pump ignores the very first RS232 command it sees after power cycling for some reason
         # so we send DIS as a junk command to get things going
+        self._ser.reset_input_buffer()
+        self._ser.flush()
         self._ser.write(f"*DIS\r".encode())
-        self.reset_alarm()
-        self._loop.create_task(self._get_rate())  # cache the rate later
+        self.set_alarm(False)
+        #self._loop.create_task(self._get_rate())  # cache the rate later
+        self._ser.reset_input_buffer()
+        self._ser.flush()
+        self._get_rate()
+        self._get_rate()
         self._cached_alarm= ""
         self._cached_prompt = ""
-        self.set_position(self._state.get("destination", 0))
+        self._state["destination"] = 0.0
+        self.set_position(0.0)
+        
+        self._update=True
 
     def close(self):
         self._ser.close()
@@ -78,39 +89,67 @@ class NewEraContinuousNextGen(UsesUart, UsesSerial, IsDiscrete, HasPosition, IsD
     def get_rate(self) -> float:
         return self._rate
 
-    async def _get_rate(self):
-        try:
-            prompt, alarm, out = await self._write("*RAT\r".encode())
-            match = rate_regex.match(out)
-            self._rate = float(match[1])
-        except TypeError:
-            await self._get_rate()
-
-    def _set_position(self, position):
-        if position >= 0.5:
-            self._ser.write("*RUN\r".encode())
+    def _get_rate(self):
+        self._update=False
+        self._ser.reset_input_buffer()
+        self._ser.flush()
+        self._ser.write(f"*RAT\r".encode())
+        out=self._ser.readline()
+        response = out.decode().strip()
+        data = response[4:]
+        if data=="":
+            data=None
+        if data:
+            self._rate = float(data)
+        self._update=True
+        
+    async def _set_position(self, position):
+        self._update=False
+        while self._updating:
+            await asyncio.sleep(0.1)
+        if "S" in self._state["current_prompt"]:
+            if position >= 0.5:
+                await self._write("STP")
+                await self._write("RUN")
+                self.logger.info(f"start: time {time.localtime()}") 
         else:
-            if self._cached_prompt not in ["S", "P"]:
-                self._ser.write("*STP\r".encode())
+            if position <= 0.5:
+                await self._write("RUN")
+                await self._write("STP")
+                self.logger.info(f"stop: time {time.localtime()}") 
+        self._update=True
 
     def set_rate(self, rate):
+        self._update=False
+        while self._updating:
+            time.sleep(0.1)
         rate = f"{rate:0.3f}"[:5]
+        self._ser.reset_input_buffer()
+        self._ser.flush()
         self._ser.write(f"*RAT{rate}\r".encode())
-        self._loop.create_task(self._get_rate())
-
+        self.logger.info(f"rate change to {rate}: time {time.localtime()}") 
+        self._rate=rate
+        self._update=True
+        
     def set_alarm(self, alarm):
         """Sets the alarm on the pump."""
         assert (alarm==True or alarm==False)
         if alarm:
-            self._ser.write("*OUT51\r".encode())
-            self._ser.write("*BUZ1\r".encode())
+            self._ser.reset_input_buffer()
+            self._ser.flush()
+            self._ser.write(f"*OUT51\r".encode()) 
+            self._ser.write(f"*BUZ2\r".encode())
             self._state["current_alarm"]="U"
             self.logger.info(f"Alarmed by User: time {time.localtime()}")
         else:
-            self._ser.write("*OUT50\r".encode())
-            self._ser.write("*BUZ0\r".encode())
+            self._ser.reset_input_buffer()
+            self._ser.flush()
+            self._ser.write(f"*OUT50\r".encode()) 
+            self._ser.write(f"*BUZ2\r".encode())
             self._state["current_alarm"]=""
-  
+            self.logger.info(f"Alarm deactivated by User: time {time.localtime()}")
+
+
     def get_alarm(self):
         alarm=self._state["current_alarm"]
         if (alarm == None or alarm == ""):
@@ -120,13 +159,13 @@ class NewEraContinuousNextGen(UsesUart, UsesSerial, IsDiscrete, HasPosition, IsD
 
     async def update_state(self):
         while True:
-            prompt, alarm, out = await self._write("".encode())
+            prompt, alarm, out = await self._write("")
             if prompt is not None:
                 if self._cached_prompt != prompt:
                     self._cached_prompt = prompt
                     self.logger.info(f"prompt change {prompt}: time {time.localtime()}")
                     self._state["current_prompt"]=prompt
-
+                    self._state["current_alarm"] = ""
             if alarm is not None:
                 if self._cached_alarm != alarm:
                     self._cached_alarm = alarm
@@ -134,17 +173,11 @@ class NewEraContinuousNextGen(UsesUart, UsesSerial, IsDiscrete, HasPosition, IsD
                     self._state["current_alarm"]=alarm
                     prompt, alarm, out = await self._write("BUZ12")
                     prompt, alarm, out = await self._write("OUT51")
-
-            if self._state["destination"] >= 0.5:
-                self._busy = prompt not in ["I", "W"]
-            else:
-                self._busy = prompt in ["I", "W"]
-            if not self._busy:
-                self._state["position"] = self._state["destination"]
             if self._state["position"] >= 0.5:
                 self._state["position_identifier"] = "pumping"
             else:
                 self._state["position_identifier"] = "paused"
+
             await asyncio.sleep(0.2)
 
     async def _write(self, command):

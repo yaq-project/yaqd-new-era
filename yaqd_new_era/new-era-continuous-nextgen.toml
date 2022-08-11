@@ -40,12 +40,17 @@ default = ""
 doc = "Get current rate, in units specified within config."
 response = "double"
 
+[messages.get_alarm]
+doc = "Gets the alarm."
+response = "boolean"
+
+
 [messages.set_rate]
 doc = "Set current rate, in units specified within config."
 request = [{"name"="rate", "type"="double"}]
 
 [messages.set_alarm]
-doc = "Disables buzzer if active and sets output IO to LOW."
+doc = "Sets the alarm based on the boolean."
 request = [{"name"="alarm", "type"="boolean"}]
 
 
