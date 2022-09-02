@@ -1,5 +1,10 @@
 {
     "config": {
+        "address": {
+            "default": 0,
+            "doc": "New era address within RS232 network. Integer from 0 to 99.",
+            "type": "int"
+        },
         "baud_rate": {
             "default": 19200,
             "origin": "uses-uart",
@@ -172,7 +177,10 @@
         "get_rate": {
             "doc": "Get current rate, in units specified within config.",
             "request": [],
-            "response": "double"
+            "response": [
+                "double",
+                "string"
+            ]
         },
         "get_state": {
             "doc": "Get version of the running daemon",
@@ -188,6 +196,12 @@
                 "null",
                 "string"
             ]
+        },
+        "home": {
+            "doc": "Initiates the homing procedure.\nThe daemon will report as busy during the homing procedure.\n After the homing procedure is complete, the daemon will return to the current destination.\n",
+            "origin": "is-homeable",
+            "request": [],
+            "response": "null"
         },
         "id": {
             "doc": "JSON object with information to identify the daemon, including name, kind, make, model, serial.\n",
@@ -239,6 +253,10 @@
                 {
                     "name": "rate",
                     "type": "double"
+                },
+                {
+                    "name": "rate_units",
+                    "type": "string"
                 }
             ],
             "response": "null"
@@ -356,6 +374,7 @@
         "has-position",
         "is-daemon",
         "is-discrete",
+        "is-homeable",
         "uses-serial",
         "uses-uart"
     ],
