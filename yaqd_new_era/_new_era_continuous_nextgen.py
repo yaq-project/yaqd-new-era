@@ -1,11 +1,5 @@
-from cmath import nan
-from pickletools import stringnl_noescape
-import re
 import asyncio
-import time
-from typing import Dict, Any, List
 import serial
-from yaqd_core import IsDaemon, HasPosition, IsDiscrete, UsesSerial, UsesUart, aserial, IsHomeable
 import numpy as np
 from ._new_era_x2 import NewEraX2
 
@@ -46,8 +40,6 @@ IGN Command ignored
 """
 
 
-rate_regex = re.compile(r"([\.\d]+)")
-
 class NewEraContinuousNextGen(NewEraX2):
     _kind = "new-era-continuous-nextgen"
 
@@ -56,10 +48,6 @@ class NewEraContinuousNextGen(NewEraX2):
         self._rate = float(np.nan)
         self._rate_units=""
         self._purging = False
-        #self._busy=False
-        #self.set_alarm(False)
-        #self._rate=self.get_rate()
-        #self.logger.info(f"B") 
         self.process_x2_data()
         self.get_rate()
 
@@ -72,11 +60,10 @@ class NewEraContinuousNextGen(NewEraX2):
         self._get_rate()
         return self._rate_units
 
-
     def _get_rate(self):
        
         async def _wait_for_ready_and_get_rate(self):
-            strn="*RAT\r"
+            strn=f"{self._address}RAT\r"
             await self._serial.write_queue.put(strn.encode())
             if self._busy and not self._homing:
                 await self._not_busy_sig.wait()
@@ -85,27 +72,27 @@ class NewEraContinuousNextGen(NewEraX2):
         self.loop.create_task(_wait_for_ready_and_get_rate(self))
 
 
+    def set_rate_units(self, units):
+        assert isinstance(units, str)
+        self.logger.info("rate setter deactivated")
+        #self._rate_units=units
+
     def set_rate(self, rate):
 
         async def _wait_for_ready_and_set_rate(self,rate):   
             if (self._state["current_alarm"] == ""):
                 rate=int(rate)
-                await self._serial.write_queue.put(f"RAT{rate}.{self._rate_units}\n".encode())
+                await self._serial.write_queue.put(f"{self._address}RAT{rate}\n".encode())
                 if self._busy and not self._homing:
                     await self._not_busy_sig.wait()
                     self._busy = True
 
         self.loop.create_task(_wait_for_ready_and_set_rate(self,rate))
     
-    
-    def set_rate_units(self, units):
-        assert isinstance(units, str)
-        self._rate_units=units
-
 
     async def _process_x2_data(self):
         while True:
-            prompt, alarm, error, data= self._serial.workers[self._address]
+            prompt, alarm, error, data= self._serial.workers[self._read_address]
             # add data, alarm, error, prompt processing here and not in the parent...
             
             def process_x2_rate(data):
@@ -120,8 +107,6 @@ class NewEraContinuousNextGen(NewEraX2):
 
     def process_x2_data(self):
         self.loop.create_task(self._process_x2_data())
-
-
 
     pass
 

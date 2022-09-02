@@ -3,7 +3,7 @@ import re
 import serial
 from yaqd_core import aserial, logging
 
-MAX_ADDRESSES=8
+MAX_ADDRESSES=10
 
 class SerialDispatcher:
     def __init__(self, port, baudrate):
@@ -16,8 +16,7 @@ class SerialDispatcher:
             self.do_writes(),
             self.read_dispatch(),
         ]
-        #self.loop.run_forever()
-
+ 
 
     def write(self, data):
         self.write_queue.put_nowait(data)

@@ -1,8 +1,8 @@
 {
     "config": {
         "address": {
-            "default": 0,
-            "doc": "New era address within RS232 network. Integer from 0 to 99.",
+            "default": -1,
+            "doc": "New era address within RS232 network. Integer from 0 to 9. If set to -1, the addressing is turned off.",
             "type": "int"
         },
         "baud_rate": {
@@ -175,12 +175,14 @@
             }
         },
         "get_rate": {
-            "doc": "Get current rate, in units specified within config.",
+            "doc": "Get current rate.",
             "request": [],
-            "response": [
-                "double",
-                "string"
-            ]
+            "response": "double"
+        },
+        "get_rate_units": {
+            "doc": "Get current rate_units (UM, UH, MM, MH) as abbreviations of ul/min, ul/hr, etc.",
+            "request": [],
+            "response": "string"
         },
         "get_state": {
             "doc": "Get version of the running daemon",
@@ -248,12 +250,18 @@
             "response": "null"
         },
         "set_rate": {
-            "doc": "Set current rate, in units specified within config.",
+            "doc": "Set current rate.",
             "request": [
                 {
                     "name": "rate",
                     "type": "double"
-                },
+                }
+            ],
+            "response": "null"
+        },
+        "set_rate_units": {
+            "doc": "Set current rate units (UH, UM, MH, MM).",
+            "request": [
                 {
                     "name": "rate_units",
                     "type": "string"
@@ -339,6 +347,17 @@
             "record_kind": "metadata",
             "setter": "set_rate",
             "type": "double",
+            "units_getter": null
+        },
+        "rate_units": {
+            "control_kind": "hinted",
+            "dynamic": true,
+            "getter": "get_rate_units",
+            "limits_getter": null,
+            "options_getter": null,
+            "record_kind": "metadata",
+            "setter": "set_rate_units",
+            "type": "string",
             "units_getter": null
         }
     },
