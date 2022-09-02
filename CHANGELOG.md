@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [2022.1.0]
 
 ### Added
-- new daemon for dual pump systems
+- new daemon for dual pump systems using x2 firmware ("nextgen")
 
 ## [2021.10.0]
 
