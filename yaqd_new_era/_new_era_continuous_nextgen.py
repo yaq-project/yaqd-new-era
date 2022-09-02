@@ -74,7 +74,7 @@ class NewEraContinuousNextGen(NewEraX2):
 
     def set_rate_units(self, units):
         assert isinstance(units, str)
-        self.logger.info("rate setter deactivated")
+        self.logger.info("rate units setter deactivated")
         #self._rate_units=units
 
     def set_rate(self, rate):
