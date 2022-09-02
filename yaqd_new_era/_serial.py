@@ -1,7 +1,6 @@
 import asyncio
-import re
 import serial
-from yaqd_core import aserial, logging
+from yaqd_core import aserial
 
 MAX_ADDRESSES=10
 
@@ -37,27 +36,31 @@ class SerialDispatcher:
 
     async def _async_read_dispatch(self):
         while True:
-            #parse = re.compile(rb"^(\d*)([A-Z][A-Z])([ -~]*)$")
             line = await self.port.areadline()
             response = line.decode().strip()
             
             await self.read_queue.put(response)
-            address = int(response[1:3])
-            prompt = alarm = error = data = None
-            if response[3] == "A":  # alarm
-                alarm = response[4:-1]
-            else:
-                prompt = response[3]      
-            if response[4] == "?":  #error
-                error = response[5:-1] 
-                if error=="":
-                    error=None         
-            else:
-                data = response[4:-1]
-                if data=="":
-                    data=None
-            self.workers[address]=prompt,alarm,error,data
+            try:
+                address = int(response[1:3])
+                if ((address >= 0) and (address <= 9)):
+                    prompt = alarm = error = data = None
+                    if response[3] == "A":  # alarm
+                        alarm = response[4:-1]
+                    else:
+                        prompt = response[3]      
+                    if response[4] == "?":  #error
+                        error = response[5:-1] 
+                        if error=="":
+                            error=None         
+                    else:
+                        data = response[4:-1]
+                        if data=="":
+                            data=None
+                    self.workers[address]=prompt,alarm,error,data
+            except:
+                pass
             await asyncio.sleep(0.25)
+
 
 
     def flush(self):
