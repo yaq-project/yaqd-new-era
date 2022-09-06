@@ -108,6 +108,3 @@ class NewEraContinuousNextGen(NewEraX2):
     def process_x2_data(self):
         self.loop.create_task(self._process_x2_data())
 
-    pass
-
-

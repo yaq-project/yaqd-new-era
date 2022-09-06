@@ -40,7 +40,6 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
     alarms_dict = {value: key for key, value in alarms.items()}
     prompts_dict = {value: key for key, value in prompts.items()}
 
-
     serial_dispatchers: Dict[str, SerialDispatcher] = {}
 
     def __init__(self, name, config, config_filepath):
@@ -72,19 +71,20 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
     def busy(self):
         return bool(super().busy())
 
-
     def _set_position(self, position):
-
         async def _wait_for_ready_and_set_position(self, position):
             if float(position) != float(0.0):
-                pos=True
+                pos = True
             else:
-                pos=False
+                pos = False
             if pos:
-                if ( "P" in self._state["current_prompt"] or "S" in self._state["current_prompt"]) and (self._state["current_alarm"] ==""):
-                    strn=f"{self._address}RUN\r"
+                if (
+                    "P" in self._state["current_prompt"] or "S" in self._state["current_prompt"]
+                ) and (self._state["current_alarm"] == ""):
+                    strn = f"{self._address}RUN\r"
                     await self._serial.write_queue.put(strn.encode())
-                    self.logger.info(f"start: time {time.localtime()}") 
+                    self.logger.info(f"start: time {time.localtime()}")
+
                 if self._busy and not self._homing:
                     await self._not_busy_sig.wait()
                     self._busy = True
@@ -98,7 +98,6 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
         
         self._serial.loop.create_task(_wait_for_ready_and_set_position(self, position))
 
-
     def set_alarm(self, alarm):
         assert isinstance(alarm, bool)
 
@@ -110,6 +109,7 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
                 await self._serial.write_queue.put(strn2.encode())
                 al=self._state["current_alarm"]
                 self.logger.info(f"alarm sounded  type:{al}  time:{time.localtime()}") 
+
                 if self._busy and not self._homing:
                     await self._not_busy_sig.wait()
                     self._busy = True
@@ -137,20 +137,11 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
             await self._serial.write_queue.put(strn.encode())
             await asyncio.sleep(0.25)
 
-        '''
-            if not self._busy:
-                try:
-                    await asyncio.wait_for(self._busy_sig.wait(), 1)
-                except asyncio.TimeoutError:
-                    pass
-            else:
-                await asyncio.sleep(0.25)
-        '''
 
     def read_from_serial(self):
-        self.loop.create_task(self._async_read_from_serial())
+        self.loop.create_task(self._read_from_serial())
 
-    async def _async_read_from_serial(self):
+    async def _read_from_serial(self):
         while True:
             prompt, alarm, error, out= self._serial.workers[self._read_address]
             
@@ -181,24 +172,27 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
 
     def home(self):
         self._busy = True
+        self._homing = True
         self._loop.create_task(self._home())
 
     async def _home(self):
-        self._homing = True
-        self._busy = True
+        
         #await self.write_queue.put() info here
-        self._homing = False
-        self._busy=False
-
+        pass
+        
 
     def direct_serial_write(self, command: bytes):
         self._busy = True
-        self._serial.write_queue.put_nowait(command)
+        self._loop.create_task(self._direct_serial_write(command))
+        
+    async def _direct_serial_write(self, command: bytes):
+        self._serial.write_queue.put(command)
+
 
     def close(self):
         self._serial.flush()
-        self._serial.close()
-        
+        self._serial.close() 
+       
 
 if __name__ == "__main__":
     NewEraX2.main()

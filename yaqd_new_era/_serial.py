@@ -2,12 +2,26 @@ import asyncio
 import serial
 from yaqd_core import aserial
 
+
 MAX_ADDRESSES=10
 
 class SerialDispatcher:
     def __init__(self, port, baudrate):
         self.port = aserial.ASerial(port, baudrate, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE, eol=b"\x03")
         self.workers =  [(None,None,None,None)] * MAX_ADDRESSES
+
+
+class SerialDispatcher:
+    def __init__(self, port, baudrate):
+        self.port = aserial.ASerial(
+            port,
+            baudrate,
+            stopbits=serial.STOPBITS_ONE,
+            bytesize=serial.EIGHTBITS,
+            parity=serial.PARITY_NONE,
+            eol=b"\x03",
+        )
+        self.workers = [(None, None, None, None)] * MAX_ADDRESSES
         self.write_queue = asyncio.Queue()
         self.read_queue = asyncio.Queue()
         self.loop = asyncio.get_event_loop()
@@ -15,7 +29,6 @@ class SerialDispatcher:
             self.do_writes(),
             self.read_dispatch(),
         ]
- 
 
     def write(self, data):
         self.write_queue.put_nowait(data)
@@ -38,15 +51,16 @@ class SerialDispatcher:
         while True:
             line = await self.port.areadline()
             response = line.decode().strip()
-            
             await self.read_queue.put(response)
             try:
                 address = int(response[1:3])
-                if ((address >= 0) and (address <= 9)):
+                if (address >= 0) and (address <= 9):
+
                     prompt = alarm = error = data = None
                     if response[3] == "A":  # alarm
                         alarm = response[4:-1]
                     else:
+
                         prompt = response[3]      
                     if response[4] == "?":  #error
                         error = response[5:-1] 
@@ -62,10 +76,8 @@ class SerialDispatcher:
             await asyncio.sleep(0.25)
 
 
-
     def flush(self):
         self.port.flush()
-
 
     def close(self):
         self.loop.create_task(self._close())
@@ -76,3 +88,5 @@ class SerialDispatcher:
             await worker.join()
         for task in self.tasks:
             task.cancel()
+
+
