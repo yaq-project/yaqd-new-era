@@ -131,9 +131,7 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
                 self._busy = True
             self._state["current_alarm"] = ""
 
-            
-    def _set_position(self,position):
-
+    def _set_position(self, position):
         async def _wait_for_ready_and_set_position(self, position):
             if float(position) != float(0.0):
                 pos = True
