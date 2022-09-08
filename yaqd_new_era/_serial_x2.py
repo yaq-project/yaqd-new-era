@@ -4,7 +4,8 @@ from yaqd_core import aserial
 import time
 
 
-MAX_ADDRESSES=10
+MAX_ADDRESSES = 10
+
 
 class SerialDispatcher:
     def __init__(self, port, baudrate):
@@ -33,7 +34,7 @@ class SerialDispatcher:
 
     async def _async_do_writes(self):
         while self.port.is_open:
-            if True: 
+            if True:
                 data = await self.write_queue.get()
                 self.port.write(data)
 
@@ -48,10 +49,10 @@ class SerialDispatcher:
         # "*", but it returns an address of 0 and therefore fills that index.
         # But a "*" call will return values for all other pumps on the line
         # as well. The addressing/arraying method herein was felt to best
-        # accomodate these varying serial setups.  
-        
+        # accomodate these varying serial setups.
+
         while self.port.is_open:
-            if True: #self.closing==False:
+            if True:  # self.closing==False:
                 line = await self.port.areadline()
                 response = line.decode().strip()
                 await self.read_queue.put(response)
@@ -62,16 +63,16 @@ class SerialDispatcher:
                         if response[3] == "A":  # alarm
                             alarm = response[4:-1]
                         else:
-                            prompt = response[3]      
-                        if response[4] == "?":  #error
-                            error = response[5:-1] 
-                            if error=="":
-                                error=None         
+                            prompt = response[3]
+                        if response[4] == "?":  # error
+                            error = response[5:-1]
+                            if error == "":
+                                error = None
                         else:
                             data = response[4:-1]
-                            if data=="":
-                                data=None
-                        self.workers[address]=prompt,alarm,error,data
+                            if data == "":
+                                data = None
+                        self.workers[address] = prompt, alarm, error, data
                 except:
                     pass
 
@@ -80,11 +81,10 @@ class SerialDispatcher:
 
     def close(self):
         for task in self.tasks:
-            task.cancel()   # NOTE: the task order may be important (cancel writes before reads)
-            time.sleep(1.0) # somewhere around what we would think a serial timeout to be
+            task.cancel()  # NOTE: the task order may be important (cancel writes before reads)
+            time.sleep(1.0)  # somewhere around what we would think a serial timeout to be
         self._close()
         self.port.close()
 
     def _close(self):
         pass
-

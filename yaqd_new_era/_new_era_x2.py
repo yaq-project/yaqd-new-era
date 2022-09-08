@@ -112,7 +112,7 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
         else:
             strn=f"{self._address}STP\r"
             await self._serial.write_queue.put(strn.encode())
-            self.logger.info(f"stop: time {time.localtime()}") 
+            self.logger.info(f"stop: time {time.localtime()}")
             if self._busy and not self._homing:
                 await self._not_busy_sig.wait()
                 self._busy = True
@@ -135,7 +135,7 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
             await self._serial.write_queue.put(strn1.encode())
             await self._serial.write_queue.put(strn2.encode())
             self.logger.info(f"alarm sounded  time:{time.localtime()}")
-            self.set_position(0.0) 
+            self.set_position(0.0)
             if self._busy and not self._homing:
                 await self._not_busy_sig.wait()
                 self._busy = True
@@ -147,7 +147,7 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
             if self._busy and not self._homing:
                 await self._not_busy_sig.wait()
                 self._busy = True
-            self._state["current_alarm"]="" 
+            self._state["current_alarm"]=""
 =======
         async def _wait_for_ready_and_set_position(self, position):
             if float(position) != float(0.0):
@@ -249,7 +249,7 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
                         #log the alarm turn off?
                     pass
                 if error is not None:
-                    self.logger.info(f"command error: {error}") 
+                    self.logger.info(f"command error: {error}")
                     pass
                 if out is not None:
                     #self.logger.info(f"return: {out}")  #turn this back on if one needs to use direct_serial_write often
@@ -313,7 +313,7 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
             task.cancel()
         self._loop.create_task(self._close())
         time.sleep(4.0)
-  
+
     async def _close(self):
         while self._loop.is_running():
             await asyncio.sleep(0.25)
@@ -322,7 +322,7 @@ class NewEraX2(UsesUart, UsesSerial, IsHomeable, IsDiscrete, HasPosition, IsDaem
         self._serial.close()
 <<<<<<< HEAD
         await asyncio.sleep(2.5)
-        
+
 
     async def update_state(self):
         while True:

@@ -386,7 +386,10 @@
             "default": "paused",
             "doc": "Current position identifier.",
             "origin": "is-discrete",
-            "type": "string"
+            "type": [
+                "null",
+                "string"
+            ]
         }
     },
     "traits": [
