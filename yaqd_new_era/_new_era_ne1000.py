@@ -33,8 +33,6 @@ class NewEraNe1000(UsesUart, UsesSerial, HasLimits, HasPosition, IsDaemon):
         self._ser.write(f"{self._config['address']} DIS\r".encode())
         self._loop.create_task(self._get_rate())  # cache the rate later
 
-    def close(self):
-        self._ser.close()
 
     def direct_serial_write(self, message: bytes):
         self._ser.write(message)

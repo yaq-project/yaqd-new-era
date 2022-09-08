@@ -28,7 +28,6 @@ default = {"paused" = 0, "pumping"=1}
 [state]
 
 [state.position_identifier]
-type = "string"
 default = "paused"
 
 [state.current_alarm]

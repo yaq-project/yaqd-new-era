@@ -48,7 +48,7 @@ class NewEraContinuousNextGen(NewEraX2):
         self._rate = float(np.nan)
         self._rate_units=""
         self._purging = False
-        self.process_x2_data()
+        self.tasks.append(self._process_x2_data())
         self.get_rate()
 
 
@@ -69,12 +69,12 @@ class NewEraContinuousNextGen(NewEraX2):
                 await self._not_busy_sig.wait()
                 self._busy = True
         
-        self.loop.create_task(_wait_for_ready_and_get_rate(self))
+        self._loop.create_task(_wait_for_ready_and_get_rate(self))
 
 
     def set_rate_units(self, units):
         assert isinstance(units, str)
-        self.logger.info("rate units setter deactivated")
+        self.logger.info("rate units setting is deactivated")
         #self._rate_units=units
 
     def set_rate(self, rate):
@@ -87,12 +87,16 @@ class NewEraContinuousNextGen(NewEraX2):
                     await self._not_busy_sig.wait()
                     self._busy = True
 
-        self.loop.create_task(_wait_for_ready_and_set_rate(self,rate))
+        self._loop.create_task(_wait_for_ready_and_set_rate(self,rate))
     
 
     async def _process_x2_data(self):
         while True:
             prompt, alarm, error, data= self._serial.workers[self._read_address]
+            # I would have to set up a emitter for changes within self._serial.workers
+            # if this processing step were to be streamlined...I did not want
+            # to cross ports yet.  See serial for reason behind the array of workers
+            
             # add data, alarm, error, prompt processing here and not in the parent...
             
             def process_x2_rate(data):
@@ -100,11 +104,10 @@ class NewEraContinuousNextGen(NewEraX2):
                 if ((units=="UM") or (units=="MM") or (units=="UH") or (units=="MH")):
                     self._rate=float(data[:-3])
                     self._rate_units=units
-            
             if data is not None:
                 process_x2_rate(data)
             await asyncio.sleep(0.25)    
 
-    def process_x2_data(self):
-        self.loop.create_task(self._process_x2_data())
+    #def process_x2_data(self):
+    #    self._loop.create_task(self._process_x2_data())
 
