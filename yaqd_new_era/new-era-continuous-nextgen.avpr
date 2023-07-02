@@ -1,5 +1,10 @@
 {
     "config": {
+        "address": {
+            "default": -1,
+            "doc": "New era address within RS232 network. Integer from 0 to 9. If set to -1, the addressing is turned off.",
+            "type": "int"
+        },
         "baud_rate": {
             "default": 19200,
             "origin": "uses-uart",
@@ -113,6 +118,11 @@
             ],
             "response": "null"
         },
+        "get_alarm": {
+            "doc": "Gets the alarm.",
+            "request": [],
+            "response": "boolean"
+        },
         "get_config": {
             "doc": "Full configuration for the individual daemon as defined in the TOML file.\nThis includes defaults and shared settings not directly specified in the daemon-specific TOML table.\n",
             "origin": "is-daemon",
@@ -165,9 +175,14 @@
             }
         },
         "get_rate": {
-            "doc": "Get current rate, in units specified within config.",
+            "doc": "Get current rate.",
             "request": [],
             "response": "double"
+        },
+        "get_rate_units": {
+            "doc": "Get current rate_units (UM, UH, MM, MH) as abbreviations of ul/min, ul/hr, etc.",
+            "request": [],
+            "response": "string"
         },
         "get_state": {
             "doc": "Get version of the running daemon",
@@ -184,6 +199,12 @@
                 "string"
             ]
         },
+        "home": {
+            "doc": "Initiates the homing procedure.\nThe daemon will report as busy during the homing procedure.\n After the homing procedure is complete, the daemon will return to the current destination.\n",
+            "origin": "is-homeable",
+            "request": [],
+            "response": "null"
+        },
         "id": {
             "doc": "JSON object with information to identify the daemon, including name, kind, make, model, serial.\n",
             "origin": "is-daemon",
@@ -195,6 +216,16 @@
                     "string"
                 ]
             }
+        },
+        "set_alarm": {
+            "doc": "Sets the alarm based on the boolean.",
+            "request": [
+                {
+                    "name": "alarm",
+                    "type": "boolean"
+                }
+            ],
+            "response": "null"
         },
         "set_identifier": {
             "doc": "Set using an identifier. Returns new destination.",
@@ -219,11 +250,21 @@
             "response": "null"
         },
         "set_rate": {
-            "doc": "Set current rate, in units specified within config.",
+            "doc": "Set current rate.",
             "request": [
                 {
                     "name": "rate",
                     "type": "double"
+                }
+            ],
+            "response": "null"
+        },
+        "set_rate_units": {
+            "doc": "Set current rate units (UH, UM, MH, MM).",
+            "request": [
+                {
+                    "name": "rate_units",
+                    "type": "string"
                 }
             ],
             "response": "null"
@@ -253,6 +294,17 @@
         }
     },
     "properties": {
+        "alarm": {
+            "control_kind": "hinted",
+            "dynamic": true,
+            "getter": "get_alarm",
+            "limits_getter": null,
+            "options_getter": null,
+            "record_kind": "metadata",
+            "setter": "set_alarm",
+            "type": "boolean",
+            "units_getter": null
+        },
         "destination": {
             "control_kind": "hinted",
             "dynamic": true,
@@ -296,11 +348,30 @@
             "setter": "set_rate",
             "type": "double",
             "units_getter": null
+        },
+        "rate_units": {
+            "control_kind": "hinted",
+            "dynamic": true,
+            "getter": "get_rate_units",
+            "limits_getter": null,
+            "options_getter": null,
+            "record_kind": "metadata",
+            "setter": "set_rate_units",
+            "type": "string",
+            "units_getter": null
         }
     },
     "protocol": "new-era-continuous-nextgen",
     "requires": [],
     "state": {
+        "current_alarm": {
+            "default": "",
+            "type": "string"
+        },
+        "current_prompt": {
+            "default": "",
+            "type": "string"
+        },
         "destination": {
             "default": NaN,
             "origin": "has-position",
@@ -312,7 +383,7 @@
             "type": "double"
         },
         "position_identifier": {
-            "default": null,
+            "default": "paused",
             "doc": "Current position identifier.",
             "origin": "is-discrete",
             "type": [
@@ -325,6 +396,7 @@
         "has-position",
         "is-daemon",
         "is-discrete",
+        "is-homeable",
         "uses-serial",
         "uses-uart"
     ],

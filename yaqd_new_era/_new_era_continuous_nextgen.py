@@ -1,15 +1,20 @@
-import re
 import asyncio
-import time
-from typing import Dict, Any, List
-
-from yaqd_core import IsDaemon, HasPosition, IsDiscrete, UsesSerial, UsesUart, aserial
-
+import serial
+import numpy as np
+from ._new_era_x2 import NewEraX2
 
 """
-The next generation continuous pumping program works in multiple phases.
+The full command set, alarms, prompts, addressing (for multiple pumps) mechanisms,
+and errors are found in the NE4000 manual.   Additional commands may be found for the X2
+firmware.
 
-When queried (PHN):
+Current daemon assumes only one pump system is in communication with the associated
+serial ("COM") port.   To avoid errors in addressing, all commands are preceded by an
+asterisk which bypasses the requirement for tagging an address to the serial command but
+then does not allow other devices on the serial line.
+
+When queried (*):
+Prompts
 I - infusing
 W - withdrawing
 S - stopped
@@ -17,91 +22,86 @@ P - paused
 T - timed pause
 U - user wait
 X - purging
+
+Alarms
+R - Pump Reset (Power interrupted)
+S - Pump Stall
+T - Serial timeout
+E - Program error
+O - Program phase number out of range
+U - User Commanded Alarm (added)
+
+Errors (Prompt fields)
+? - Command unrecognized
+NA- Command N/A
+OOR Command data out of range
+COM Invalid Serial packet
+IGN Command ignored
 """
 
 
-rate_regex = re.compile(r"([\.\d]+)")
-
-
-class NewEraContinuousNextGen(UsesUart, UsesSerial, IsDiscrete, HasPosition, IsDaemon):
+class NewEraContinuousNextGen(NewEraX2):
     _kind = "new-era-continuous-nextgen"
 
     def __init__(self, name, config, config_filepath):
         super().__init__(name, config, config_filepath)
-        self._ser = aserial.ASerial(
-            self._config["serial_port"], baudrate=self._config["baud_rate"], eol="\x03".encode()
-        )
-        self._rate = None
+        self._rate = float(np.nan)
+        self._rate_units = ""
         self._purging = False
-        # the pump ignores the very first RS232 command it sees after power cycling for some reason
-        # so we send DIS as a junk command to get things going
-        self._ser.write(f"*DIS\r".encode())
-        self._loop.create_task(self._get_rate())  # cache the rate later
-        self._cached_prompt = ""
-        self.set_position(self._state.get("destination", 0))
+        self.tasks.append(self._process_x2_data())
+        self.get_rate()
 
-    def close(self):
-        self._ser.close()
-
-    def direct_serial_write(self, message: bytes):
-        self._ser.write(message)
-
-    def get_rate(self) -> float:
+    def get_rate(self):
+        self._get_rate()
         return self._rate
 
-    async def _get_rate(self):
-        try:
-            prompt, alarm, out = await self._write("RAT")
-            match = rate_regex.match(out)
-            self._rate = float(match[1])
-        except TypeError:
-            await self._get_rate()
+    def get_rate_units(self):
+        self._get_rate()
+        return self._rate_units
 
-    def _set_position(self, position):
-        if position >= 0.5:
-            self._ser.write("*RUN\r".encode())
-        else:
-            if self._cached_prompt not in ["S", "P"]:
-                self._ser.write("*STP\r".encode())
+    def _get_rate(self):
+        async def _wait_for_ready_and_get_rate(self):
+            strn = f"{self._address}RAT\r"
+            await self._serial.write_queue.put(strn.encode())
+            if self._busy and not self._homing:
+                await self._not_busy_sig.wait()
+                self._busy = True
+
+        self._loop.create_task(_wait_for_ready_and_get_rate(self))
+
+    def set_rate_units(self, units):
+        assert isinstance(units, str)
+        self.logger.info("rate units setter deactivated")
+        # self._rate_units=units
 
     def set_rate(self, rate):
-        rate = f"{rate:0.3f}"[:5]
-        self._ser.write(f"* RAT {rate}\r".encode())
-        self._loop.create_task(self._get_rate())
+        async def _wait_for_ready_and_set_rate(self, rate):
+            if self._state["current_alarm"] == "":
+                rate = int(rate)
+                await self._serial.write_queue.put(f"{self._address}RAT{rate}\n".encode())
+                if self._busy and not self._homing:
+                    await self._not_busy_sig.wait()
+                    self._busy = True
 
-    async def update_state(self):
+        self._loop.create_task(_wait_for_ready_and_set_rate(self, rate))
+
+    async def _process_x2_data(self):
         while True:
-            prompt, alarm, out = await self._write("PHN")
-            self._cached_prompt = prompt
-            if self._state["destination"] >= 0.5:
-                self._busy = self._cached_prompt not in ["I", "W"]
-            else:
-                self._busy = self._cached_prompt in ["I", "W"]
-            if not self._busy:
-                self._state["position"] = self._state["destination"]
-            if self._state["position"] >= 0.5:
-                self._state["position_identifier"] = "pumping"
-            else:
-                self._state["position_identifier"] = "paused"
+            prompt, alarm, error, data = self._serial.workers[self._read_address]
+            # add data, alarm, error, prompt processing here and not in the parent...
 
-    async def _write(self, command):
-        try:
-            await asyncio.sleep(0.1)
-            self._ser.reset_input_buffer()
-            self._ser.flush()
-            self.logger.debug(f"Sent command: {command}")
-            out = f"*{command}\r".encode()
-            response = await self._ser.awrite_then_readline(out)
-            response = response.decode().strip()
-            self.logger.debug(f"Recieved response: {response}")
-            address = int(response[1:3])
-            prompt = alarm = data = None
-            if response[3] == "A":  # alarm
-                alarm = response[5]
-            else:
-                prompt = response[3]
-                data = response[4:]
-            return prompt, alarm, data
-        except (UnicodeDecodeError, ValueError) as e:  # try again
-            self.logger.error(e)
-            return await self._write(command)
+            # I would have to set up a emitter for changes within self._serial.workers
+            # if this processing step were to be streamlined...I did not want
+            # to cross ports yet.  See serial for reason behind the array of workers
+            def process_x2_rate(data):
+                units = data[-2:]
+                if (units == "UM") or (units == "MM") or (units == "UH") or (units == "MH"):
+                    self._rate = float(data[:-3])
+                    self._rate_units = units
+
+            if data is not None:
+                process_x2_rate(data)
+            await asyncio.sleep(0.25)
+
+    # def process_x2_data(self):
+    #    self._loop.create_task(self._process_x2_data())
