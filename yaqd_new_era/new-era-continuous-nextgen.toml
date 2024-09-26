@@ -1,6 +1,6 @@
 protocol = "new-era-continuous-nextgen"
 doc = "Daemon for controlling dual syringe pumps with special next generation firmware from New Era."
-traits = ["has-position", "is-discrete", "uses-serial", "uses-uart", "is-daemon"]
+traits = ["has-position", "is-discrete", "is-homeable", "uses-serial", "uses-uart", "is-daemon"]
 hardware = ["new-era:dualne1000"]
 
 [links]
@@ -14,20 +14,58 @@ conda-forge = "https://anaconda.org/conda-forge/yaqd-new-era"
 [config]
 
 [config.baud_rate]
+type= "int"
 default = 19200
+
+[config.address]
+doc = "New era address within RS232 network. Integer from 0 to 9. If set to -1, the addressing is turned off."
+type = "int"
+default = -1
 
 [config.identifiers]
 default = {"paused" = 0, "pumping"=1}
 
+[state]
+
+[state.position_identifier]
+default = "paused"
+
+[state.current_alarm]
+type = "string"
+default = ""
+
+[state.current_prompt]
+type = "string"
+default = ""
+
+
 [messages]
 
 [messages.get_rate]
-doc = "Get current rate, in units specified within config."
+doc = "Get current rate."
 response = "double"
 
+[messages.get_rate_units]
+doc = "Get current rate_units (UM, UH, MM, MH) as abbreviations of ul/min, ul/hr, etc."
+response = "string"
+
+[messages.get_alarm]
+doc = "Gets the alarm."
+response = "boolean"
+
+
 [messages.set_rate]
-doc = "Set current rate, in units specified within config."
+doc = "Set current rate."
 request = [{"name"="rate", "type"="double"}]
+
+[messages.set_rate_units]
+doc = "Set current rate units (UH, UM, MH, MM)."
+request = [{"name"="rate_units", "type"="string"}]
+
+[messages.set_alarm]
+doc = "Sets the alarm based on the boolean."
+request = [{"name"="alarm", "type"="boolean"}]
+
 
 [properties]
 
@@ -37,3 +75,18 @@ getter = "get_rate"
 setter = "set_rate"
 control_kind = "hinted"
 record_kind = "metadata"
+
+[properties.rate_units]
+type = "string"
+getter = "get_rate_units"
+setter = "set_rate_units"
+control_kind = "hinted"
+record_kind = "metadata"
+
+[properties.alarm]
+type="boolean"
+getter= "get_alarm"
+setter = "set_alarm"
+control_kind="hinted"
+record_kind="metadata"
+

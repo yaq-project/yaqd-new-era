@@ -14,7 +14,7 @@ conda-forge = "https://anaconda.org/conda-forge/yaqd-new-era"
 [config]
 
 [config.address]
-doc = "New era address within RS232 network. Integer from 0 to 99."
+doc = "New era address within RS232 network. Integer from 0 to 9."
 type = "int"
 
 [config.diameter]
