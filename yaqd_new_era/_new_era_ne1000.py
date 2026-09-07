@@ -5,7 +5,6 @@ from typing import Dict, Any, List
 
 from yaqd_core import IsDaemon, HasPosition, HasLimits, UsesSerial, UsesUart, aserial
 
-
 dis_regex = re.compile(r"^I([\.\d]+)W([\.\d]+)")
 rate_regex = re.compile(r"([\.\d]+)")
 
