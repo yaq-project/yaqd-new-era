@@ -5,7 +5,6 @@ from typing import Dict, Any, List
 
 from yaqd_core import IsDaemon, HasPosition, IsDiscrete, UsesSerial, UsesUart, aserial
 
-
 """
 The next generation continuous pumping program works in multiple phases.
 
